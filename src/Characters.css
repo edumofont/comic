@@ -1,0 +1,121 @@
+.characters-view {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at top right, #2a1a2a 0%, var(--bg-color) 100%);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.chars-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  margin-bottom: 30px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.chars-header h2 {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.chars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 50px;
+}
+
+.char-card {
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  border-left: 5px solid var(--primary-color);
+  transition: transform 0.3s;
+}
+
+.char-card:hover {
+  transform: scale(1.02);
+}
+
+.char-content h3 {
+  font-size: 2rem;
+  margin: 0 0 5px 0;
+  color: white;
+}
+
+.char-content h4 {
+  font-size: 1.1rem;
+  color: var(--primary-color);
+  margin: 0 0 15px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.char-content p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-line;
+  font-size: 1.1rem;
+}
+
+.char-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.char-card.align-right {
+  flex-direction: row-reverse;
+  border-left: none;
+  border-right: 5px solid var(--primary-color);
+  text-align: right;
+}
+
+.char-card.align-center {
+  flex-direction: column;
+  text-align: center;
+  border-left: none;
+  border-top: 5px solid var(--primary-color);
+}
+
+.char-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-image: url('/assets/pages/portada.jpeg');
+  background-size: 500%;
+  border: 3px solid var(--primary-color);
+  flex-shrink: 0;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+/* Avatares fijos (El usuario debe sobreescribir estos archivos en public/assets/avatars) */
+.avatar-edu {
+  background-image: url('/assets/pages/portada.jpeg');
+  background-size: 300%;
+  background-position: 25% 60%;
+}
+.avatar-ruth {
+  background-image: url('/assets/pages/portada.jpeg');
+  background-size: 300%;
+  background-position: 75% 60%;
+}
+.avatar-marypaula {
+  background-image: url('/assets/avatars/marypaula.jpg');
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px; /* Sin recortar en círculo redondo */
+  width: 150px; /* Un poco más ancho para que quepan las dos */
+}

@@ -1,0 +1,40 @@
+.music-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+}
+
+.music-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+/* Print CSS */
+@media print {
+  body {
+    background: white;
+  }
+  .music-toggle, .navbar, .nav-btn, .main-menu, .gallery-view {
+    display: none !important;
+  }
+  .book-container {
+    padding: 0;
+  }
+  .comic-reader {
+    background: white;
+    height: auto;
+  }
+}
