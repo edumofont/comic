@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
-import { Home, Play, Printer, Maximize2, Columns } from 'lucide-react';
+import { Home, Play, Printer, Maximize2, Columns, ZoomIn, X } from 'lucide-react';
 import { sfxBase64 } from './sfx';
 import './ComicReader.css';
 
@@ -21,6 +21,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
   const [currentPage, setCurrentPage] = useState(startPage);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [isAutoplay, setIsAutoplay] = useState(false);
+  const [zoomMode, setZoomMode] = useState(false);
   
   const isMobileDevice = windowSize.width < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const [singlePage, setSinglePage] = useState(initialSinglePage || isMobileDevice);
@@ -68,7 +69,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
 
   useEffect(() => {
     let interval;
-    if (isAutoplay) {
+    if (isAutoplay && !zoomMode) {
       interval = setInterval(() => {
         if (bookRef.current && bookRef.current.pageFlip()) {
           bookRef.current.pageFlip().flipNext();
@@ -76,7 +77,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
       }, 5000);
     }
     return () => clearInterval(interval);
-  }, [isAutoplay]);
+  }, [isAutoplay, zoomMode]);
 
   const onPage = (e) => {
     setCurrentPage(e.data);
@@ -101,7 +102,6 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
   if (isSingleMode) {
     bookSize = "fixed";
     bookWidth = wrapperWidth - (isMobileDevice ? 0 : 40);
-    // TRUCO: Forzamos height > width para que react-pageflip active el Portrait Mode obligatoriamente
     bookHeight = Math.max(wrapperHeight, bookWidth + 1);
   } else {
     bookSize = "stretch";
@@ -113,6 +113,34 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     <div className="comic-reader fade-in" style={{ backgroundColor: '#111', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <audio ref={sfxRef} src={sfxBase64} preload="auto" />
       
+      {zoomMode && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: '#000', zIndex: 9999, overflow: 'auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <button 
+            onClick={() => setZoomMode(false)}
+            style={{
+              position: 'fixed', top: 20, right: 20, zIndex: 10000,
+              background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
+              padding: 10, color: '#fff', cursor: 'pointer'
+            }}
+          >
+            <X size={30} />
+          </button>
+          <img 
+            src={PAGE_ASSETS[currentPage]} 
+            alt="Zoomed" 
+            style={{ width: '100%', minWidth: '1000px', height: 'auto', objectFit: 'contain' }} 
+            onClick={(e) => {
+              // Permitir hacer doble click o click para hacer toggle entre tamaño original y ancho total
+              e.target.style.minWidth = e.target.style.minWidth === '1000px' ? '2000px' : '1000px';
+            }}
+          />
+        </div>
+      )}
+
       <div className="navbar glass-panel" style={{ zIndex: 10 }}>
         <button className="icon-btn" onClick={onBack} title="Volver al menú">
           <Home size={24} />
@@ -121,6 +149,9 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
           <span className="page-counter">Página {currentPage + 1} de {PAGE_ASSETS.length}</span>
         </div>
         <div className="navbar-actions">
+          <button className="icon-btn" onClick={() => setZoomMode(true)} title="Ampliar imagen">
+            <ZoomIn size={20} />
+          </button>
           {!isMobileDevice && (
             <button 
               className="icon-btn" 
