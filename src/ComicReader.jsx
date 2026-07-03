@@ -5,11 +5,10 @@ import { sfxBase64 } from './sfx';
 import './ComicReader.css';
 
 const generatePages = () => {
-  const pages = ['portada.jpeg'];
+  const pages = ['contraportada.jpeg', 'portada.jpeg'];
   for (let i = 1; i <= 28; i++) {
     pages.push(`${i}.jpeg`);
   }
-  pages.push('contraportada.jpeg');
   return pages.map(p => `/assets/pages/${p}`);
 };
 
@@ -248,7 +247,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
           size={bookSize}
           minWidth={315} maxWidth={3000} minHeight={400} maxHeight={3000}
           maxShadowOpacity={0.5} 
-          showCover={!isSingleMode} 
+          showCover={false} 
           mobileScrollSupport={true}
           usePortrait={isSingleMode} 
           className="flip-book" 
