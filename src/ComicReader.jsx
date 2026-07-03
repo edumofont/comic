@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
-import { Home, Play, Printer, Maximize2, Columns, ZoomIn, X } from 'lucide-react';
+import { Home, Play, Printer, Maximize2, Columns, ZoomIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { sfxBase64 } from './sfx';
 import './ComicReader.css';
 
@@ -71,13 +71,18 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     let interval;
     if (isAutoplay && !zoomMode) {
       interval = setInterval(() => {
-        if (bookRef.current && bookRef.current.pageFlip()) {
+        if (isMobileDevice) {
+          if (currentPage < PAGE_ASSETS.length - 1) {
+            setCurrentPage(prev => prev + 1);
+            playFlipSound();
+          }
+        } else if (bookRef.current && bookRef.current.pageFlip()) {
           bookRef.current.pageFlip().flipNext();
         }
       }, 5000);
     }
     return () => clearInterval(interval);
-  }, [isAutoplay, zoomMode]);
+  }, [isAutoplay, zoomMode, isMobileDevice, currentPage]);
 
   const onPage = (e) => {
     setCurrentPage(e.data);
@@ -94,6 +99,55 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     printWindow.document.close();
   };
 
+  // MODO MÓVIL NATIVO (Sin efecto 3D, permite zoom nativo)
+  if (isMobileDevice) {
+    return (
+      <div className="comic-reader fade-in" style={{ backgroundColor: '#000', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <audio ref={sfxRef} src={sfxBase64} preload="auto" />
+        <div className="navbar glass-panel" style={{ zIndex: 10 }}>
+          <button className="icon-btn" onClick={onBack} title="Volver al menú">
+            <Home size={24} />
+          </button>
+          <div className="navbar-center">
+            <span className="page-counter">Página {currentPage + 1} de {PAGE_ASSETS.length}</span>
+          </div>
+          <div className="navbar-actions">
+            <button className={`icon-btn ${isAutoplay ? 'active-auto' : ''}`} onClick={() => setIsAutoplay(!isAutoplay)}>
+              <Play size={20} />
+            </button>
+          </div>
+        </div>
+        
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {currentPage > 0 && (
+            <button 
+              onClick={() => { setCurrentPage(currentPage - 1); playFlipSound(); }}
+              style={{ position: 'fixed', left: 10, top: '50%', transform: 'translateY(-50%)', zIndex: 100, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: 'white', padding: '15px' }}
+            >
+              <ChevronLeft size={30} />
+            </button>
+          )}
+
+          <img 
+            src={PAGE_ASSETS[currentPage]} 
+            alt={`Page ${currentPage}`} 
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+          />
+
+          {currentPage < PAGE_ASSETS.length - 1 && (
+            <button 
+              onClick={() => { setCurrentPage(currentPage + 1); playFlipSound(); }}
+              style={{ position: 'fixed', right: 10, top: '50%', transform: 'translateY(-50%)', zIndex: 100, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: 'white', padding: '15px' }}
+            >
+              <ChevronRight size={30} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // MODO ORDENADOR (Con efecto 3D)
   const wrapperWidth = windowSize.width;
   const wrapperHeight = windowSize.height - 120;
   const isSingleMode = singlePage || isMobileDevice;
@@ -101,7 +155,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
   let bookWidth, bookHeight, bookSize;
   if (isSingleMode) {
     bookSize = "fixed";
-    bookWidth = wrapperWidth - (isMobileDevice ? 0 : 40);
+    bookWidth = wrapperWidth - 40;
     bookHeight = Math.max(wrapperHeight, bookWidth + 1);
   } else {
     bookSize = "stretch";
@@ -155,15 +209,13 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
           <button className="icon-btn" onClick={() => setZoomMode(true)} title="Ampliar imagen">
             <ZoomIn size={20} />
           </button>
-          {!isMobileDevice && (
-            <button 
-              className="icon-btn" 
-              onClick={() => setSinglePage(!singlePage)}
-              title={singlePage ? "Modo Pequeño (2 Páginas)" : "Modo Grande (1 Página)"}
-            >
-              {singlePage ? <Columns size={20} /> : <Maximize2 size={20} />}
-            </button>
-          )}
+          <button 
+            className="icon-btn" 
+            onClick={() => setSinglePage(!singlePage)}
+            title={singlePage ? "Modo Pequeño (2 Páginas)" : "Modo Grande (1 Página)"}
+          >
+            {singlePage ? <Columns size={20} /> : <Maximize2 size={20} />}
+          </button>
           <button 
             className={`icon-btn ${isAutoplay ? 'active-auto' : ''}`} 
             onClick={() => setIsAutoplay(!isAutoplay)}
