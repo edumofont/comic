@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
-import { Home, ChevronLeft, ChevronRight, Play, Printer, Maximize2, Columns } from 'lucide-react';
+import { Home, Play, Printer, Maximize2, Columns } from 'lucide-react';
 import { sfxBase64 } from './sfx';
 import './ComicReader.css';
 
@@ -146,16 +146,12 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
       </div>
 
       <div className="book-container">
-        <button className="nav-btn prev-btn" onClick={prevButtonClick} disabled={currentPage === 0}>
-          <ChevronLeft size={40} />
-        </button>
-
         <HTMLFlipBook 
           key={singlePage ? 'single' : 'double'} 
           width={bookWidth} height={bookHeight} size="stretch"
           minWidth={315} maxWidth={1000} minHeight={400} maxHeight={1533}
           maxShadowOpacity={0.5} showCover={!singlePage} mobileScrollSupport={true}
-          usePortrait={singlePage} 
+          usePortrait={singlePage || isMobile} 
           className="flip-book" onFlip={onPage} ref={bookRef}
         >
           {PAGE_ASSETS.map((src, index) => (
@@ -164,10 +160,6 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
             </div>
           ))}
         </HTMLFlipBook>
-
-        <button className="nav-btn next-btn" onClick={nextButtonClick} disabled={currentPage >= PAGE_ASSETS.length - 1}>
-          <ChevronRight size={40} />
-        </button>
       </div>
     </div>
   );
