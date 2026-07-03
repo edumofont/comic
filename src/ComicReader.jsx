@@ -79,7 +79,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
         } else if (bookRef.current && bookRef.current.pageFlip()) {
           bookRef.current.pageFlip().flipNext();
         }
-      }, 5000);
+      }, 15000);
     }
     return () => clearInterval(interval);
   }, [isAutoplay, zoomMode, isMobileDevice, currentPage]);
@@ -219,7 +219,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
           <button 
             className={`icon-btn ${isAutoplay ? 'active-auto' : ''}`} 
             onClick={() => setIsAutoplay(!isAutoplay)}
-            title="Auto-Play (5s)"
+            title="Auto-Play (15s)"
           >
             <Play size={20} />
           </button>
