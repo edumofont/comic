@@ -21,7 +21,9 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
   const [currentPage, setCurrentPage] = useState(startPage);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [isAutoplay, setIsAutoplay] = useState(false);
-  const [singlePage, setSinglePage] = useState(initialSinglePage); // false = Pequeño (2 págs), true = Grande (1 pág)
+  
+  const isMobileDevice = windowSize.width < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const [singlePage, setSinglePage] = useState(initialSinglePage || isMobileDevice);
 
   const playFlipSound = () => {
     if (sfxRef.current) {
@@ -41,7 +43,6 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     const timer = setTimeout(() => {
       if (bookRef.current && bookRef.current.pageFlip()) {
         try {
-          // Si cambiamos a doble página y estábamos en impar, ajustamos para que se vea bien
           let target = currentPage;
           if (!singlePage && target % 2 !== 0 && target > 0) target -= 1;
           bookRef.current.pageFlip().turnToPage(target);
@@ -49,7 +50,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [singlePage]);
+  }, [singlePage, currentPage]);
 
   // Ir a la página seleccionada al cargar el visor
   useEffect(() => {
@@ -82,20 +83,6 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     playFlipSound();
   };
 
-  const nextButtonClick = () => {
-    playFlipSound();
-    if (bookRef.current && bookRef.current.pageFlip()) {
-      bookRef.current.pageFlip().flipNext();
-    }
-  };
-
-  const prevButtonClick = () => {
-    playFlipSound();
-    if (bookRef.current && bookRef.current.pageFlip()) {
-      bookRef.current.pageFlip().flipPrev();
-    }
-  };
-
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     printWindow.document.write('<html><head><title>Imprimir Cómic</title><style>body { text-align: center; margin: 0; padding: 0; } img { max-width: 100%; margin-bottom: 20px; page-break-after: always; display: block; margin-left: auto; margin-right: auto; }</style></head><body>');
@@ -106,52 +93,27 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     printWindow.document.close();
   };
 
-  const isMobile = windowSize.width < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const wrapperWidth = windowSize.width;
+  const wrapperHeight = windowSize.height - 120;
+  const isSingleMode = singlePage || isMobileDevice;
   
-  if (isMobile) {
-    return (
-      <div className="comic-reader fade-in" style={{ backgroundColor: '#111', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <audio ref={sfxRef} src={sfxBase64} preload="auto" />
-        <div className="navbar glass-panel" style={{ zIndex: 10 }}>
-          <button className="icon-btn" onClick={onBack} title="Volver al menú">
-            <Home size={24} />
-          </button>
-          <div className="navbar-center">
-            <span className="page-counter">{currentPage + 1} / {PAGE_ASSETS.length}</span>
-          </div>
-          <div className="navbar-actions">
-            <button className={`icon-btn ${isAutoplay ? 'active-auto' : ''}`} onClick={() => setIsAutoplay(!isAutoplay)}>
-              <Play size={20} />
-            </button>
-          </div>
-        </div>
-        <div 
-          style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            if (e.clientX - rect.left < rect.width / 3) {
-              if (currentPage > 0) { setCurrentPage(currentPage - 1); playFlipSound(); }
-            } else {
-              if (currentPage < PAGE_ASSETS.length - 1) { setCurrentPage(currentPage + 1); playFlipSound(); }
-            }
-          }}
-        >
-          <img src={PAGE_ASSETS[currentPage]} alt={`Page ${currentPage}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-        </div>
-      </div>
-    );
+  let bookWidth, bookHeight, bookSize;
+  if (isSingleMode) {
+    bookSize = "fixed";
+    bookWidth = wrapperWidth - (isMobileDevice ? 0 : 40);
+    // TRUCO: Forzamos height > width para que react-pageflip active el Portrait Mode obligatoriamente
+    bookHeight = Math.max(wrapperHeight, bookWidth + 1);
+  } else {
+    bookSize = "stretch";
+    bookWidth = wrapperWidth / 2.5;
+    bookHeight = Math.max(wrapperHeight, 550);
   }
 
-  // En modo 1 página, hacemos que ocupe casi toda la pantalla verticalmente
-  // Para que react-pageflip no muestre 2 páginas, el ancho DEBE ser menor que el alto
-  const bookHeight = singlePage ? windowSize.height - 120 : 550;
-  const bookWidth = singlePage ? Math.min(windowSize.width - 40, bookHeight * 0.95) : (windowSize.width / 2.5);
-
   return (
-    <div className="comic-reader fade-in">
+    <div className="comic-reader fade-in" style={{ backgroundColor: '#111', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <audio ref={sfxRef} src={sfxBase64} preload="auto" />
       
-      <div className="navbar glass-panel">
+      <div className="navbar glass-panel" style={{ zIndex: 10 }}>
         <button className="icon-btn" onClick={onBack} title="Volver al menú">
           <Home size={24} />
         </button>
@@ -159,13 +121,15 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
           <span className="page-counter">Página {currentPage + 1} de {PAGE_ASSETS.length}</span>
         </div>
         <div className="navbar-actions">
-          <button 
-            className="icon-btn" 
-            onClick={() => setSinglePage(!singlePage)}
-            title={singlePage ? "Modo Pequeño (2 Páginas)" : "Modo Grande (1 Página)"}
-          >
-            {singlePage ? <Columns size={20} /> : <Maximize2 size={20} />}
-          </button>
+          {!isMobileDevice && (
+            <button 
+              className="icon-btn" 
+              onClick={() => setSinglePage(!singlePage)}
+              title={singlePage ? "Modo Pequeño (2 Páginas)" : "Modo Grande (1 Página)"}
+            >
+              {singlePage ? <Columns size={20} /> : <Maximize2 size={20} />}
+            </button>
+          )}
           <button 
             className={`icon-btn ${isAutoplay ? 'active-auto' : ''}`} 
             onClick={() => setIsAutoplay(!isAutoplay)}
@@ -179,18 +143,42 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
         </div>
       </div>
 
-      <div className="book-container">
+      <div 
+        className="book-container" 
+        style={{ 
+          flex: 1, 
+          position: 'relative', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          overflow: 'hidden' 
+        }}
+      >
         <HTMLFlipBook 
-          key={singlePage ? 'single' : 'double'} 
-          width={bookWidth} height={bookHeight} size="stretch"
-          minWidth={315} maxWidth={1000} minHeight={400} maxHeight={1533}
-          maxShadowOpacity={0.5} showCover={!singlePage} mobileScrollSupport={true}
-          usePortrait={singlePage || isMobile} 
-          className="flip-book" onFlip={onPage} ref={bookRef}
+          key={isSingleMode ? 'single' : 'double'} 
+          width={bookWidth} 
+          height={bookHeight} 
+          size={bookSize}
+          minWidth={315} maxWidth={3000} minHeight={400} maxHeight={3000}
+          maxShadowOpacity={0.5} 
+          showCover={!isSingleMode} 
+          mobileScrollSupport={true}
+          usePortrait={isSingleMode} 
+          className="flip-book" 
+          onFlip={onPage} 
+          ref={bookRef}
         >
           {PAGE_ASSETS.map((src, index) => (
-            <div className="page" key={index}>
-              <img src={src} alt={`Page ${index}`} className="page-image" />
+            <div className="page" key={index} style={{ backgroundColor: '#111' }}>
+              <img 
+                src={src} 
+                alt={`Page ${index}`} 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain' 
+                }} 
+              />
             </div>
           ))}
         </HTMLFlipBook>
