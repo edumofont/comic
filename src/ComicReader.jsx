@@ -51,7 +51,7 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [singlePage, currentPage]);
+  }, [singlePage]);
 
   // Ir a la página seleccionada al cargar el visor
   useEffect(() => {
@@ -68,9 +68,10 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
   }, [startPage]);
 
   useEffect(() => {
-    let interval;
+    let timeout;
     if (isAutoplay && !zoomMode) {
-      interval = setInterval(() => {
+      const delay = currentPage === 0 ? 3000 : 15000;
+      timeout = setTimeout(() => {
         if (isMobileDevice) {
           if (currentPage < PAGE_ASSETS.length - 1) {
             setCurrentPage(prev => prev + 1);
@@ -79,9 +80,9 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
         } else if (bookRef.current && bookRef.current.pageFlip()) {
           bookRef.current.pageFlip().flipNext();
         }
-      }, 15000);
+      }, delay);
     }
-    return () => clearInterval(interval);
+    return () => clearTimeout(timeout);
   }, [isAutoplay, zoomMode, isMobileDevice, currentPage]);
 
   const onPage = (e) => {
