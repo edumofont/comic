@@ -106,12 +106,46 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
     printWindow.document.close();
   };
 
-  const isMobile = windowSize.width < 768;
+  const isMobile = windowSize.width < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   
+  if (isMobile) {
+    return (
+      <div className="comic-reader fade-in" style={{ backgroundColor: '#111', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <audio ref={sfxRef} src={sfxBase64} preload="auto" />
+        <div className="navbar glass-panel" style={{ zIndex: 10 }}>
+          <button className="icon-btn" onClick={onBack} title="Volver al menú">
+            <Home size={24} />
+          </button>
+          <div className="navbar-center">
+            <span className="page-counter">{currentPage + 1} / {PAGE_ASSETS.length}</span>
+          </div>
+          <div className="navbar-actions">
+            <button className={`icon-btn ${isAutoplay ? 'active-auto' : ''}`} onClick={() => setIsAutoplay(!isAutoplay)}>
+              <Play size={20} />
+            </button>
+          </div>
+        </div>
+        <div 
+          style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (e.clientX - rect.left < rect.width / 3) {
+              if (currentPage > 0) { setCurrentPage(currentPage - 1); playFlipSound(); }
+            } else {
+              if (currentPage < PAGE_ASSETS.length - 1) { setCurrentPage(currentPage + 1); playFlipSound(); }
+            }
+          }}
+        >
+          <img src={PAGE_ASSETS[currentPage]} alt={`Page ${currentPage}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+        </div>
+      </div>
+    );
+  }
+
   // En modo 1 página, hacemos que ocupe casi toda la pantalla verticalmente
   // Para que react-pageflip no muestre 2 páginas, el ancho DEBE ser menor que el alto
   const bookHeight = singlePage ? windowSize.height - 120 : 550;
-  const bookWidth = singlePage ? Math.min(windowSize.width - 40, bookHeight * 0.95) : (isMobile ? windowSize.width - 20 : windowSize.width / 2.5);
+  const bookWidth = singlePage ? Math.min(windowSize.width - 40, bookHeight * 0.95) : (windowSize.width / 2.5);
 
   return (
     <div className="comic-reader fade-in">
