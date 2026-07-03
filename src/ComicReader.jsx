@@ -132,10 +132,10 @@ const ComicReader = ({ startPage = 0, initialSinglePage = false, onBack, musicEn
           <img 
             src={PAGE_ASSETS[currentPage]} 
             alt="Zoomed" 
-            style={{ width: '100%', height: 'auto', objectFit: 'contain', transition: 'width 0.3s ease' }} 
+            style={{ width: '95%', height: 'auto', objectFit: 'contain', transition: 'width 0.3s ease' }} 
             onClick={(e) => {
               if (e.target.style.width === '250%') {
-                e.target.style.width = '100%';
+                e.target.style.width = '95%';
               } else {
                 e.target.style.width = '250%';
               }
